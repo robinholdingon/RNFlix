@@ -1,43 +1,77 @@
 import React from 'react'
+import Movies from './Movies'
 import {
-	View,
-	StyleSheet,
+	Navigator,
 	Text,
-	ListView,
+	View,
+	TouchableOpacity,
+	BackAndroid,
+	Platform,
 } from 'react-native'
-import * as api from './api'
 
-const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-
-	}
-})
-
-class App extends React.Component {
-	state = {
-		dataSource: new ListView.DataSource({ rowHasChanged: (r1, r2) => r1 !== r2 }),
-	}
-	render() {
-		return (
-			<ListView 
-				style={styles.container}
-				dataSource={this.state.dataSource}
-				renderRow={row => <Text>{row.title}</Text>}
-			/>
-		)
-	}
-
-	updateRows(rows) {
-		this.setState({
-			dataSource: this.state.dataSource.cloneWithRows(rows),
-		})
-	}
-	componentDidMount() {
-		api.fetchMovies()
-			.then(results => this.updateRows(results))
-			.catch(error => console.error(error))
-	}
+const navBarHeight = 60
+const navBarStyle = {
+	backgroundColor: 'rgb(100, 100, 100)',
+	height: navBarHeight, 
 }
 
+let navRef = null
+if (Platform.OS === 'android') {
+	BackAndroid.addEventListener('hardwareBackPress', () => {
+		if (navRef && navRef.getCurrentRoutes().length > 1) {
+			navRef.pop()
+			return true
+		}
+		return false;
+	})	
+}
+
+const App = () => (
+	<Navigator
+		style={{ paddingTop: navBarHeight }}
+		initialRoute={{ key: 'movies' }}
+		renderScene={(route, navigator) => {
+			navRef = navigator
+			if (route.key === 'movies') {
+				return (
+					<Movies 
+						onSelectMovie=
+							{movie => 
+								navigator.push({key: 'details', movie})
+							}
+					/>
+				)
+			}
+			return (
+				<View style={{ flex: 1, backgroundColor: 'rgb(200, 200, 200)'}}>
+					<Text> Placeholder for ... </Text>
+					<Text>{route.movie.title}</Text>
+				</View>
+			)
+		}}
+		configureScene={() => Navigator.SceneConfigs.FloatFromRight}
+		navigationBar={
+			<Navigator.NavigationBar
+				style={navBarStyle}
+				routeMapper={{
+					LeftButton: (route, navigator) => {
+						if (route.key === 'movies') return null;
+						return (
+							<TouchableOpacity onPress={() => navigator.pop()}>
+								<Text>Back</Text>
+							</TouchableOpacity>
+						)
+					},
+					RightButton: () => {},
+					Title: (route) => {
+						if (route.key === 'movies') {
+							return <Text>Now Playing</Text>
+						}
+						return null;
+					},
+				}}
+			/>
+		}
+	/>
+)
 export default App;
