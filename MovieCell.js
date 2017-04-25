@@ -6,6 +6,7 @@ import {
 	Image,
 } from 'react-native'
 import * as api from './api'
+import ProgressiveImage from './ProgressiveImage'
 
 const styles = StyleSheet.create({
 	container: {
@@ -35,9 +36,11 @@ const styles = StyleSheet.create({
 })
 const MovieCell = ({ movie }) => (
 	<View style={styles.container}>
-		<Image 
+		<ProgressiveImage 
 			style={styles.poster} 
-			source={{ uri: api.getPosterUrl(movie.poster_path) }} 
+			resizeMethod="resize"
+			sourceHigh={{ uri: api.getPosterUrlHigh(movie.poster_path) }} 
+			sourceLow={{ uri: api.getPosterUrlLow(movie.poster_path) }} 
 			resizeMode='contain'/>
 		<View style={styles.textContainer}>
 			<Text style={styles.title} numberOfLines={1}>{movie.title}</Text>
