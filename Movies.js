@@ -6,6 +6,7 @@ import {
 	ListView,
 	ActivityIndicator,
 	TouchableOpacity,
+	RefreshControl,
 } from 'react-native'
 import * as api from './api'
 import MovieCell from './MovieCell'
@@ -26,10 +27,15 @@ class Movies extends React.Component {
 		onSelectMovie: React.PropTypes.func.isRequired,
 	}
 	state = {
+		refreshing: false,
 		isLoading: false,
 		isEmpty: false,
 		dataSource: new ListView.DataSource({ rowHasChanged: (r1, r2) => r1 !== r2 }),
 	}
+	_onRefresh() {
+	    this.setState({refreshing: true});
+	    this.fetchMovies()
+	 }
 	render() {
 		if (this.state.isLoading) {
 			return (
@@ -46,6 +52,12 @@ class Movies extends React.Component {
 		}
 		return (
 			<ListView 
+				refreshControl={
+					<RefreshControl
+						refreshing={this.state.refreshing}
+						onRefresh={this._onRefresh.bind(this)}
+					/>
+				}
 				style={styles.container}
 				dataSource={this.state.dataSource}
 				renderRow={row => (
@@ -70,7 +82,11 @@ class Movies extends React.Component {
 	fetchMovies() {
 		this.setState({ isLoading: true })
 		api.fetchMovies()
-		.then(results => this.updateRows(results))
+		.then(results => {
+			this.updateRows(results)
+			this.setState({refreshing: false})
+			}
+		)
 		.catch(error => {
 			this.setState({ isLoading: false })
 			console.error(error)
